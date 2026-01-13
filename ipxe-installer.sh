@@ -18,21 +18,28 @@ DOCKER_SCRIPT="https://gist.githubusercontent.com/eclipseprotocoll/b05cda026e239
 execute() {
     local MSG="$1"
     local CMD="$2"
+
     echo -e "${DARK_BLUE}*${NC} ${YELLOW}${MSG}${NC}..."
-    
-    eval "$CMD" >> /var/log/proxmox-install.log 2>&1 &
+
+    (
+        set +e
+        eval "$CMD"
+    ) >> /var/log/proxmox-install.log 2>&1 &
+
     local pid=$!
     local spin='-\|/'
     local i=0
 
-    while kill -0 $pid 2>/dev/null; do
-        i=$(( (i+1) % 4 ))
+    while kill -0 "$pid" 2>/dev/null; do
+        i=$(( (i + 1) % 4 ))
         printf "\r${DARK_BLUE}*${NC} ${YELLOW}${MSG}${NC} (${DARK_BLUE}${spin:$i:1}${NC}) "
-        sleep .1
+        sleep 0.1
     done
 
-    wait $pid
-    if [ $? -eq 0 ]; then
+    wait "$pid"
+    local status=$?
+
+    if [ "$status" -eq 0 ]; then
         printf "\r${DARK_BLUE}*${NC} ${YELLOW}${MSG}${NC} ${GREEN}Done!${NC}\n"
     else
         printf "\r${DARK_BLUE}*${NC} ${YELLOW}${MSG}${NC} ${RED}Failed!${NC}\n"
@@ -43,13 +50,14 @@ execute() {
 # --- Pre-Setup Fixes ---
 pre_setup_fix() {
     if [ -f /etc/debian_version ] || [ -f /etc/lsb-release ]; then
-        execute "Pre-seeding GRUB Configuration" "
-        export DEBIAN_FRONTEND=noninteractive;
-        export DEBCONF_NONINTERACTIVE_SEEN=true;
-        BOOT_DISK=\$(find /dev/disk/by-id/ -type l | head -n 1);
-        echo \"grub-pc grub-pc/install_devices_empty boolean false\" | debconf-set-selections;
-        echo \"grub-pc grub-pc/install_devices multiselect \$BOOT_DISK\" | debconf-set-selections;
-        dpkg --configure -a || true"
+        execute "Pre-seeding GRUB Configuration" '
+        export DEBIAN_FRONTEND=noninteractive
+        export DEBCONF_NONINTERACTIVE_SEEN=true
+        BOOT_DISK=$(find /dev/disk/by-id/ -type l | head -n 1)
+        echo "grub-pc grub-pc/install_devices_empty boolean false" | debconf-set-selections
+        echo "grub-pc grub-pc/install_devices multiselect $BOOT_DISK" | debconf-set-selections
+        dpkg --configure -a || true
+        '
     fi
 }
 
@@ -63,7 +71,7 @@ show_menu() {
     echo "╚██████╔╝██║ ╚═╝ ██║██║  ██╗"
     echo " ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝"
     echo -e "${NC}"
-    
+
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "              ${YELLOW}PROXMOX INSTALLATION${NC}             "
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -82,29 +90,26 @@ show_menu() {
 }
 
 # --- Main Logic ---
-if [ "$EUID" -ne 0 ]; then echo -e "${RED}Run as root!${NC}"; exit 1; fi
+[ "$EUID" -ne 0 ] && { echo -e "${RED}Run as root!${NC}"; exit 1; }
+
 touch /var/log/proxmox-install.log
 
 show_menu
 
-case $OPT in
+case "$OPT" in
     1|2)
         pre_setup_fix
-        echo -e "${DARK_BLUE}*${NC} ${YELLOW}Running Ubuntu Installer...${NC}"
-        bash <(curl -sL $UBUNTU_SCRIPT)
+        bash <(curl -fsSL "$UBUNTU_SCRIPT")
         ;;
     3|4|5)
         pre_setup_fix
-        echo -e "${DARK_BLUE}*${NC} ${YELLOW}Running Debian Installer...${NC}"
-        bash <(curl -sL $DEBIAN_SCRIPT)
+        bash <(curl -fsSL "$DEBIAN_SCRIPT")
         ;;
     6|7)
-        echo -e "${DARK_BLUE}*${NC} ${YELLOW}Running RHEL Installer...${NC}"
-        bash <(curl -sL $RHEL_SCRIPT)
+        bash <(curl -fsSL "$RHEL_SCRIPT")
         ;;
     8)
-        echo -e "${DARK_BLUE}*${NC} ${YELLOW}Running Docker Installer...${NC}"
-        bash <(curl -sL $DOCKER_SCRIPT)
+        bash <(curl -fsSL "$DOCKER_SCRIPT")
         ;;
     0)
         exit 0
@@ -112,6 +117,6 @@ case $OPT in
     *)
         echo -e "${RED}Invalid option.${NC}"
         sleep 2
-        exec $0
+        exec "$0"
         ;;
 esac
