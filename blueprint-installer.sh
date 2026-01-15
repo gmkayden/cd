@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-
 # ==========================================
-# Blueprint Installer + Auto Fix
+# Blueprint Installer + Auto Fix (tput colors)
 # Made With ❤ By GMK
 # ==========================================
 
@@ -10,14 +9,19 @@ set -e
 LOG_FILE="./blueprint.log"
 touch "$LOG_FILE"
 
-# ─── Bright Colors ─────────────────────────
-RED='\033[1;31m'
-GREEN='\033[1;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[1;34m'
-PURPLE='\033[1;35m'
-CYAN='\033[1;36m'
-NC='\033[0m'
+# ─── Colors (tput) ─────────────────────────
+if [ -t 1 ]; then
+    RED=$(tput bold; tput setaf 1)
+    GREEN=$(tput bold; tput setaf 2)
+    YELLOW=$(tput bold; tput setaf 3)
+    BLUE=$(tput bold; tput setaf 4)
+    PURPLE=$(tput bold; tput setaf 5)
+    CYAN=$(tput bold; tput setaf 6)
+    NC=$(tput sgr0)
+else
+    # Non-TTY fallback
+    RED=""; GREEN=""; YELLOW=""; BLUE=""; PURPLE=""; CYAN=""; NC=""
+fi
 
 # ─── Spinner ───────────────────────────────
 spinner() {
@@ -26,12 +30,13 @@ spinner() {
     local i=0
     while kill -0 "$pid" 2>/dev/null; do
         i=$(( (i + 1) % 4 ))
-        printf "\r${CYAN}Processing... %s${NC}" "${spin:$i:1}"
+        printf "\r%sProcessing... %s%s" "$CYAN" "${spin:$i:1}" "$NC"
         sleep 0.1
     done
-    printf "\r${GREEN}✔ Done${NC}\n"
+    printf "\r%s✔ Done%s\n" "$GREEN" "$NC"
 }
 
+# ─── Banner ───────────────────────────────
 clear
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${YELLOW}██████╗ ██╗     ██╗   ██╗███████╗██████╗ ██████╗ ██╗███╗   ██╗████████╗${NC}"
@@ -45,7 +50,7 @@ echo -e "${CYAN}Blueprint Installer${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo
 
-# ─── Set Directory ─────────────────────────
+# ─── Set Pterodactyl Directory ─────────────
 export PTERODACTYL_DIRECTORY=/var/www/pterodactyl
 
 # ─── Dependencies ──────────────────────────
@@ -57,8 +62,7 @@ cd "$PTERODACTYL_DIRECTORY"
 
 # ─── Download Blueprint ────────────────────
 echo -e "${CYAN}Downloading Blueprint...${NC}"
-wget "$(curl -s https://api.github.com/repos/BlueprintFramework/framework/releases/latest \
-| grep 'browser_download_url' | grep 'release.zip' | cut -d '"' -f 4)" \
+wget "$(curl -s https://api.github.com/repos/BlueprintFramework/framework/releases/latest | grep 'browser_download_url' | grep 'release.zip' | cut -d '"' -f 4)" \
 -O release.zip &>>"$LOG_FILE" &
 spinner $!
 
@@ -67,9 +71,7 @@ unzip -o release.zip &>>"$LOG_FILE"
 # ─── Node.js 20 ────────────────────────────
 echo -e "${CYAN}Installing Node.js 20...${NC}"
 sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
-| sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" \
 | sudo tee /etc/apt/sources.list.d/nodesource.list >/dev/null
 
