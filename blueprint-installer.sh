@@ -13,7 +13,7 @@ touch "$LOG_FILE"
 if [ -t 1 ]; then
     RED=$(tput bold; tput setaf 1)
     GREEN=$(tput bold; tput setaf 2)
-    YELLOW=$(tput bold; tput setaf 3)
+    YELLOW='\033[1;33m'
     BLUE=$(tput bold; tput setaf 4)
     PURPLE=$(tput bold; tput setaf 5)
     CYAN=$(tput bold; tput setaf 6)
