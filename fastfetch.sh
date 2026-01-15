@@ -12,14 +12,13 @@ GITHUB_BASE="https://github.com/fastfetch-cli/fastfetch/releases/latest/download
 # Create log file
 touch "$LOG_FILE"
 
-# Colors
-RED='\033[1;31m'
-GREEN='\033[1;32m'
-LIME='\033[1;92m'
-PURPLE='\033[1;35m'
-CYAN='\033[1;36m'
-BLUE='\033[1;34m'
-YELLOW='\033[1;33m'
+# ===== Bright Colors =====
+BRIGHT_RED='\033[1;91m'
+BRIGHT_GREEN='\033[1;92m'
+BRIGHT_YELLOW='\033[1;93m'
+BRIGHT_BLUE='\033[1;94m'
+BRIGHT_PURPLE='\033[1;95m'
+BRIGHT_CYAN='\033[1;96m'
 NC='\033[0m'
 
 # Spinner
@@ -29,21 +28,21 @@ spinner() {
     local i=0
     while kill -0 "$pid" 2>/dev/null; do
         i=$(( (i + 1) % 4 ))
-        printf "\r${CYAN}Working... %s${NC}" "${spin:$i:1}"
+        printf "\r${BRIGHT_CYAN}Working... %s${NC}" "${spin:$i:1}"
         sleep 0.1
     done
-    printf "\r${GREEN}✔ Done!${NC}\n"
+    printf "\r${BRIGHT_GREEN}✔ Done!${NC}\n"
 }
 
-# ASCII Logo (Yellow)
+# ASCII Logo (Bright Yellow)
 ascii_logo() {
     clear
-    echo -e "${YELLOW}███████╗ █████╗ ███████╗████████╗███████╗███████╗████████╗ ██████╗██╗  ██╗${NC}"
-    echo -e "${YELLOW}██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔════╝██╔════╝╚══██╔══╝██╔════╝██║  ██║${NC}"
-    echo -e "${YELLOW}█████╗  ███████║███████╗   ██║   █████╗  █████╗     ██║   ██║     ███████║${NC}"
-    echo -e "${YELLOW}██╔══╝  ██╔══██║╚════██║   ██║   ██╔══╝  ██╔══╝     ██║   ██║     ██╔══██║${NC}"
-    echo -e "${YELLOW}██║     ██║  ██║███████║   ██║   ██║     ███████╗   ██║   ╚██████╗██║  ██║${NC}"
-    echo -e "${YELLOW}╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝     ╚══════╝   ╚═╝    ╚═════╝╚═╝  ╚═╝${NC}"
+    echo -e "${BRIGHT_YELLOW}███████╗ █████╗ ███████╗████████╗███████╗███████╗████████╗ ██████╗██╗  ██╗${NC}"
+    echo -e "${BRIGHT_YELLOW}██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔════╝██╔════╝╚══██╔══╝██╔════╝██║  ██║${NC}"
+    echo -e "${BRIGHT_YELLOW}█████╗  ███████║███████╗   ██║   █████╗  █████╗     ██║   ██║     ███████║${NC}"
+    echo -e "${BRIGHT_YELLOW}██╔══╝  ██╔══██║╚════██║   ██║   ██╔══╝  ██╔══╝     ██║   ██║     ██╔══██║${NC}"
+    echo -e "${BRIGHT_YELLOW}██║     ██║  ██║███████║   ██║   ██║     ███████╗   ██║   ╚██████╗██║  ██║${NC}"
+    echo -e "${BRIGHT_YELLOW}╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝     ╚══════╝   ╚═╝    ╚═════╝╚═╝  ╚═╝${NC}"
 }
 
 # Detect architecture
@@ -52,17 +51,17 @@ detect_arch() {
         x86_64) ARCH="amd64" ;;
         aarch64|arm64) ARCH="arm64" ;;
         *)
-            echo -e "${RED}Unsupported architecture${NC}" | tee -a "$LOG_FILE"
+            echo -e "${BRIGHT_RED}Unsupported architecture${NC}" | tee -a "$LOG_FILE"
             exit 1
             ;;
     esac
 }
 
-# Download .deb
+# Download deb
 download_deb() {
     detect_arch
     DEB_URL="$GITHUB_BASE/fastfetch-linux-$ARCH.deb"
-    echo -e "${CYAN}Downloading Fastfetch ($ARCH)...${NC}"
+    echo -e "${BRIGHT_CYAN}Downloading Fastfetch ($ARCH)...${NC}"
     wget -q "$DEB_URL" -O "$TMP_DEB" >>"$LOG_FILE" 2>&1 &
     spinner $!
 }
@@ -70,52 +69,54 @@ download_deb() {
 # Install
 install_fastfetch() {
     download_deb
-    echo -e "${LIME}Installing Fastfetch...${NC}"
+    echo -e "${BRIGHT_GREEN}Installing Fastfetch...${NC}"
     sudo apt install -y "$TMP_DEB" >>"$LOG_FILE" 2>&1 &
     spinner $!
     rm -f "$TMP_DEB"
 
     if command -v fastfetch >/dev/null 2>&1; then
-        echo -e "${LIME}✔ Fastfetch installed successfully!${NC}"
+        echo -e "${BRIGHT_GREEN}✔ Fastfetch installed successfully!${NC}"
+        echo -e "${BRIGHT_GREEN}Run : fastfetch to use FastFetch${NC}"
     else
-        echo -e "${RED}❌ Installation failed. Check fastfetch.log${NC}"
+        echo -e "${BRIGHT_RED}❌ Installation failed. Check fastfetch.log${NC}"
     fi
 }
 
 # Update
 update_fastfetch() {
     download_deb
-    echo -e "${PURPLE}Updating Fastfetch...${NC}"
+    echo -e "${BRIGHT_PURPLE}Updating Fastfetch...${NC}"
     sudo apt install -y "$TMP_DEB" >>"$LOG_FILE" 2>&1 &
     spinner $!
     rm -f "$TMP_DEB"
 
     if command -v fastfetch >/dev/null 2>&1; then
-        echo -e "${PURPLE}✔ Fastfetch updated successfully!${NC}"
+        echo -e "${BRIGHT_PURPLE}✔ Fastfetch updated successfully!${NC}"
+        echo -e "${BRIGHT_PURPLE}Run : fastfetch to use FastFetch${NC}"
     else
-        echo -e "${RED}❌ Update failed. Check fastfetch.log${NC}"
+        echo -e "${BRIGHT_RED}❌ Update failed. Check fastfetch.log${NC}"
     fi
 }
 
 # Uninstall
 uninstall_fastfetch() {
-    echo -e "${RED}Uninstalling Fastfetch...${NC}"
+    echo -e "${BRIGHT_RED}Uninstalling Fastfetch...${NC}"
     sudo dpkg -r fastfetch >>"$LOG_FILE" 2>&1 &
     spinner $!
 
     if ! command -v fastfetch >/dev/null 2>&1; then
-        echo -e "${RED}✔ Fastfetch removed successfully${NC}"
+        echo -e "${BRIGHT_RED}✔ Fastfetch removed successfully${NC}"
     else
-        echo -e "${RED}❌ Uninstall failed. Check fastfetch.log${NC}"
+        echo -e "${BRIGHT_RED}❌ Uninstall failed. Check fastfetch.log${NC}"
     fi
 }
 
 # Menu
 menu() {
-    echo -e "${BLUE}1) Install FastFetch${NC}"
-    echo -e "${BLUE}2) Update FastFetch${NC}"
-    echo -e "${BLUE}3) Uninstall FastFetch${NC}"
-    echo -e "${BLUE}0) Exit${NC}"
+    echo -e "${BRIGHT_BLUE}1) Install FastFetch${NC}"
+    echo -e "${BRIGHT_BLUE}2) Update FastFetch${NC}"
+    echo -e "${BRIGHT_BLUE}3) Uninstall FastFetch${NC}"
+    echo -e "${BRIGHT_BLUE}0) Exit${NC}"
     echo
     read -rp "Select an option: " choice
 
@@ -125,12 +126,12 @@ menu() {
         3) uninstall_fastfetch ;;
         0)
             echo
-            echo "Bye 👋"
-            echo "Made With ❤ By Eiro (eiro.tf)"
+            echo -e "${BRIGHT_CYAN}Bye 👋${NC}"
+            echo -e "${BRIGHT_CYAN}Made With ❤ By Eiro (eiro.tf)${NC}"
             exit 0
             ;;
         *)
-            echo -e "${RED}* Invalid Option! Please Try Again!${NC}"
+            echo -e "${BRIGHT_RED}* Invalid Option! Please Try Again!${NC}"
             sleep 1
             ;;
     esac
