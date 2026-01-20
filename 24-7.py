@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import os
 import random
 import string
@@ -7,12 +8,12 @@ import subprocess
 import threading
 import itertools
 
-# ───────────── SPINNER ───────────── #
-def spinner(text):
+# ───────────── BRAILLE SPINNER ─────────────
+def braille_spinner(text):
     stop_flag = {"stop": False}
 
     def spin():
-        for c in itertools.cycle(['-', '\\', '|', '/']):
+        for c in itertools.cycle(['⠁','⠃','⠇','⠧','⠷','⠿','⠿','⠷','⠧','⠇','⠃']):
             if stop_flag["stop"]:
                 break
             print(f"\r{text} {c}", end="", flush=True)
@@ -28,9 +29,9 @@ def spinner(text):
 
     return stop
 
-# ───────────── INSTALL DEPENDENCIES ───────────── #
+# ───────────── INSTALL DEPENDENCIES ─────────────
 def install_dependencies():
-    stop = spinner("Installing Dependencies")
+    stop = braille_spinner("Installing Dependencies")
 
     # Detect Codesandbox environment
     if os.path.exists("/.codesandbox"):
@@ -43,34 +44,15 @@ def install_dependencies():
     process = subprocess.Popen(cmd, shell=True)
     while process.poll() is None:
         time.sleep(0.1)
+
     stop()
     time.sleep(0.3)
 
-# ───────────── ENABLE ROOT ───────────── #
-def enable_root():
-    stop = spinner("Enabling Root")
-    time.sleep(0.5)  # small delay for spinner effect
-
-    if os.path.exists("/.codesandbox"):
-        # Codesandbox: run bash (no sudo)
-        cmd = "bash"
-        print("\nRunning bash shell (Codesandbox)...")
-    else:
-        # GitHub / Linux: switch to root
-        cmd = "sudo su"
-        print("\nSwitching to root (GitHub / Linux)...")
-
-    try:
-        subprocess.run(cmd, shell=True)
-    except Exception as e:
-        print(f"Failed to enable root: {e}")
-    stop()
-
-# ───────────── RANDOM TEXT ───────────── #
+# ───────────── RANDOM TEXT ─────────────
 def random_text(length=60):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-# ───────────── FILE CYCLE ───────────── #
+# ───────────── FILE CYCLE ─────────────
 def file_cycle():
     folder = "24-7"
     os.makedirs(folder, exist_ok=True)
@@ -104,8 +86,7 @@ def file_cycle():
             print(f"Error: {e}")
             time.sleep(3)
 
-# ───────────── RUNNER ───────────── #
+# ───────────── RUNNER ─────────────
 if __name__ == "__main__":
     install_dependencies()
-    enable_root()    # <-- environment-aware root enabling
     file_cycle()
